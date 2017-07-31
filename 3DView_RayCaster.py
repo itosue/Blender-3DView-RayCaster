@@ -21,40 +21,18 @@ class view_ray_cast(bpy.types.Operator):
 	
 	@classmethod
 	def poll(cls, context):
-		try: context.scene, context.space_data, context.space_data.region_3d
+		try:
+			context.space_data.cursor_location, context.space_data.region_3d.view_location
+			if not bpy.ops.view3d.cursor3d.poll() or not bpy.ops.view3d.view_center_cursor.poll(): return False
 		except: return False
 		return True
 	
-	def invoke(self, context, event):
-		self.mouse_region_position = (event.mouse_region_x, event.mouse_region_y)
-		return self.execute(context)
-	
 	def execute(self, context):
-		
-		def click_to_3d(context, mouse_region_position):
-			region, rv3d, coord = context.region, context.space_data.region_3d, mouse_region_position
-			origin = bpy_extras.view3d_utils.region_2d_to_origin_3d(region, rv3d, coord)
-			direction = bpy_extras.view3d_utils.region_2d_to_vector_3d(region, rv3d, coord)
-			return origin, direction
-		origin, direction = click_to_3d(context, self.mouse_region_position)
-		
-		is_succeeded, loc, no, i, ob, mat = context.scene.ray_cast(origin, direction)
-		if is_succeeded:
-			new_cursor_location = loc.copy()
-		else:
-			def get_best_cursor_location(context, origin, direction):
-				pt = context.space_data.region_3d.view_location.copy()
-				line_p1 = origin + (direction * -10000)
-				line_p2 = origin + (direction * 10000)
-				return mathutils.geometry.intersect_point_line(pt, line_p1, line_p2)[0]
-			new_cursor_location = get_best_cursor_location(context, origin, direction)
-		
-		def temporary_view_center_cursor(new_loc):
-			pre_loc, context.space_data.cursor_location = context.space_data.cursor_location.copy(), new_loc
-			bpy.ops.view3d.view_center_cursor()
-			context.space_data.cursor_location = pre_loc
-		temporary_view_center_cursor(new_cursor_location)
-		
+		c_sd, c_upv = context.space_data, context.user_preferences.view
+		pre_cursor_location, c_sd.cursor_location = c_sd.cursor_location.copy(), c_sd.region_3d.view_location.copy()
+		pre_use_mouse_depth_cursor, c_upv.use_mouse_depth_cursor = c_upv.use_mouse_depth_cursor, True
+		bpy.ops.view3d.cursor3d('INVOKE_DEFAULT'), bpy.ops.view3d.view_center_cursor()
+		c_sd.cursor_location, c_upv.use_mouse_depth_cursor = pre_cursor_location, pre_use_mouse_depth_cursor
 		return {'FINISHED'}
 
 addon_keymaps = []
