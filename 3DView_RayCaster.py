@@ -31,7 +31,7 @@ class view_ray_cast(bpy.types.Operator):
 		c_sd, c_upv = context.space_data, context.user_preferences.view
 		pre_cursor_location, c_sd.cursor_location = c_sd.cursor_location.copy(), c_sd.region_3d.view_location.copy()
 		pre_use_mouse_depth_cursor, c_upv.use_mouse_depth_cursor = c_upv.use_mouse_depth_cursor, True
-		bpy.ops.view3d.cursor3d('INVOKE_DEFAULT'), bpy.ops.view3d.view_center_cursor()
+		bpy.ops.view3d.cursor3d('INVOKE_DEFAULT'), bpy.ops.view3d.view_center_cursor('INVOKE_DEFAULT')
 		c_sd.cursor_location, c_upv.use_mouse_depth_cursor = pre_cursor_location, pre_use_mouse_depth_cursor
 		return {'FINISHED'}
 
